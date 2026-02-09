@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Pixel Task Valley</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1 class="pixel-font">할일 마을</h1>
+            <p class="subtitle">오늘의 퀘스트를 완료하세요!</p>
+        </header>
+
+        <section class="input-section pixel-box">
+            <div class="row">
+                <input type="text" id="todo-input" placeholder="새로운 할 일 입력..." autocomplete="off">
+            </div>
+            
+            <div class="row details-row">
+                <select id="category-select">
+                    <option value="book">📚 공부</option>
+                    <option value="briefcase">💼 직장</option>
+                    <option value="home">🏠 집안일</option>
+                    <option value="star">✨ 기타</option>
+                </select>
+                <input type="date" id="deadline-input">
+            </div>
+
+            <div class="row priority-row">
+                <label class="checkbox-pixel">
+                    <input type="checkbox" id="urgent-check">
+                    <span class="checkmark"></span>
+                    🔥 긴급
+                </label>
+                <label class="checkbox-pixel">
+                    <input type="checkbox" id="important-check">
+                    <span class="checkmark"></span>
+                    ⭐ 중요
+                </label>
+            </div>
+
+            <textarea id="desc-input" placeholder="상세 설명 (선택 사항)" rows="2"></textarea>
+            
+            <button id="add-btn" class="pixel-btn">등록하기</button>
+        </section>
+
+        <section class="list-section">
+            <ul id="todo-list">
+                </ul>
+        </section>
+        
+        <div class="completed-toggle">
+            <button id="toggle-completed-btn" class="pixel-btn-small">완료된 일 보기</button>
+        </div>
+        
+        <section class="completed-section hidden" id="completed-section">
+            <h3>완료된 퀘스트</h3>
+            <ul id="completed-list"></ul>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+/* 1. 폰트 로드 */
+@font-face {
+    font-family: 'LeeSeoyun';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --bg-color: #FDF6E3; /* 따뜻한 종이 색 */
+    --box-bg: #FFFFFF;
+    --primary-color: #8B5E3C; /* 나무 색 */
+    --accent-color: #85C1E9; /* 하늘색 */
+    --pixel-border: 2px solid #2C3E50;
+    --shadow: 4px 4px 0px #2C3E50;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Pretendard', sans-serif; /* 본문 기본 */
+    margin: 0;
+    padding: 20px;
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 타이틀용 폰트 적용 */
+.pixel-font, h1, h2, h3, .subtitle, button {
+    font-family: 'LeeSeoyun', cursive;
+}
+
+.app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding-bottom: 50px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    text-shadow: 2px 2px 0px #FFF;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* 픽셀 박스 스타일 (입력창 등) */
+.pixel-box {
+    background: var(--box-bg);
+    border: var(--pixel-border);
+    box-shadow: var(--shadow);
+    padding: 15px;
+    border-radius: 8px; /* 약간 둥글게 하되 테두리는 픽셀 느낌 */
+    margin-bottom: 25px;
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Pretendard';
+    font-size: 16px; /* 모바일 확대 방지 */
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* 버튼 스타일 */
+.pixel-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border: 2px solid #2C3E50;
+    box-shadow: 2px 2px 0px #2C3E50;
+    padding: 12px;
+    width: 100%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.pixel-btn:active {
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}
+
+/* 체크박스 커스텀 */
+.checkbox-pixel {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.checkbox-pixel input {
+    margin-right: 5px;
+    width: auto;
+}
+
+/* 리스트 아이템 스타일 */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+.todo-item {
+    background: white;
+    border: 2px solid #2C3E50;
+    box-shadow: 3px 3px 0px #ddd;
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.todo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.todo-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    flex-grow: 1;
+    margin-left: 10px;
+}
+
+.todo-meta {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.priority-badge {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1px solid #000;
+}
+
+.p-high { background: #FF4757; } /* 긴급+중요 (빨강) */
+.p-mid { background: #FFA502; }  /* 둘 중 하나 (주황) */
+.p-low { background: #2ED573; }  /* 여유 (초록) */
+
+.todo-desc {
+    margin-top: 8px;
+    padding: 8px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #555;
+    border-left: 3px solid #ccc;
+    display: none; /* 기본 숨김 */
+}
+
+.todo-desc.show {
+    display: block;
+}
+
+.todo-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.action-btn {
+    background: none;
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* 완료된 항목 스타일 */
+.completed-section {
+    margin-top: 30px;
+    border-top: 2px dashed #ccc;
+    padding-top: 20px;
+}
+.hidden { display: none; }
+
+.todo-item.completed {
+    background: #eee;
+    color: #999;
+    box-shadow: none;
+    border-color: #ccc;
+}
+.todo-item.completed .todo-title {
+    text-decoration: line-through;
+}
