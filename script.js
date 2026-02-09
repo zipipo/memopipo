@@ -1,303 +1,172 @@
-/* 1. 폰트 로드 (모두 통일) */
-@font-face {
-    font-family: 'LeeSeoyun';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
+let todos = [];
+
+// DOM 요소
+const todoList = document.getElementById('todo-list');
+const fabBtn = document.getElementById('fab-btn');
+const modalOverlay = document.getElementById('modal-overlay');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const addBtn = document.getElementById('add-btn');
+
+// 입력 필드들
+const todoInput = document.getElementById('todo-input');
+const categorySelect = document.getElementById('category-select');
+const deadlineInput = document.getElementById('deadline-input');
+const urgentCheck = document.getElementById('urgent-check');
+const importantCheck = document.getElementById('important-check');
+const descInput = document.getElementById('desc-input');
+
+// 1. 초기화 및 실행
+function init() {
+    const saved = localStorage.getItem('memopipoTodos');
+    if (saved) {
+        todos = JSON.parse(saved);
+    }
+    render();
 }
 
-:root {
-    --bg-color: #FDFBF7; /* 아주 연한 미색 (종이 느낌) */
-    --text-color: #4A4A4A;
-    --leaf-color: #78C2AD; /* 부드러운 초록색 */
-    --accent-red: #FF6B6B;
-    --modal-bg: #FFFFFF;
-    --line-color: #E0E0E0;
+// 2. 모달 열기/닫기
+fabBtn.addEventListener('click', () => {
+    modalOverlay.classList.remove('hidden');
+    todoInput.focus();
+});
+
+function closeModal() {
+    modalOverlay.classList.add('hidden');
+    resetInputs();
 }
 
-* {
-    box-sizing: border-box; /* 크기 계산 오류 방지 */
+closeModalBtn.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+});
+
+// 3. 할 일 추가하기
+addBtn.addEventListener('click', () => {
+    const title = todoInput.value.trim();
+    if (!title) {
+        alert("할 일을 적어주세요!");
+        return;
+    }
+
+    const newTodo = {
+        id: Date.now(),
+        title: title,
+        category: categorySelect.value, // Me, School 등
+        deadline: deadlineInput.value,
+        isUrgent: urgentCheck.checked,
+        isImportant: importantCheck.checked,
+        description: descInput.value,
+        isCompleted: false,
+        createdAt: Date.now()
+    };
+
+    todos.push(newTodo);
+    saveAndRender();
+    closeModal(); // 입력 후 닫기
+});
+
+function resetInputs() {
+    todoInput.value = '';
+    descInput.value = '';
+    urgentCheck.checked = false;
+    importantCheck.checked = false;
+    deadlineInput.value = '';
+    categorySelect.selectedIndex = 0;
 }
 
-body {
-    background-color: var(--bg-color);
-    font-family: 'LeeSeoyun', sans-serif !important; /* 강제 적용 */
-    margin: 0;
-    padding: 20px;
-    color: var(--text-color);
-    overflow-x: hidden; /* 가로 스크롤 방지 */
+// 4. 우선순위 점수 계산 (정렬용)
+function getScore(todo) {
+    if (todo.isCompleted) return -1; // 완료된 건 맨 뒤로
+
+    let score = 0;
+    if (todo.isUrgent) score += 30;
+    if (todo.isImportant) score += 20;
+
+    if (todo.deadline) {
+        const today = new Date().setHours(0,0,0,0);
+        const dDay = new Date(todo.deadline).setHours(0,0,0,0);
+        const diff = (dDay - today) / (1000 * 60 * 60 * 24);
+
+        if (diff < 0) score += 50; // 지남
+        else if (diff <= 1) score += 40; // 오늘/내일
+        else if (diff <= 3) score += 10;
+    }
+    return score;
 }
 
-input, button, select, textarea {
-    font-family: 'LeeSeoyun', sans-serif !important;
+// 5. 화면 그리기 (렌더링)
+function render() {
+    todoList.innerHTML = '';
+
+    // 정렬 로직: 1. 점수 높은순, 2. 점수 같으면 최신순(ID 내림차순)
+    todos.sort((a, b) => {
+        const scoreA = getScore(a);
+        const scoreB = getScore(b);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return b.id - a.id; // 최신 등록이 위로
+    });
+
+    todos.forEach(todo => {
+        const li = document.createElement('li');
+        li.className = `todo-item ${todo.isCompleted ? 'completed' : ''}`;
+
+        // 우선순위 점 색상
+        let dotClass = 'dot-gray';
+        const score = getScore(todo);
+        if (score >= 40) dotClass = 'dot-red';
+        else if (score >= 20) dotClass = 'dot-blue';
+
+        li.innerHTML = `
+            <div class="todo-main">
+                <input type="checkbox" class="circle-check" 
+                    ${todo.isCompleted ? 'checked' : ''} 
+                    onchange="toggleComplete(${todo.id})">
+                
+                <div class="todo-content">
+                    <span class="todo-title" onclick="toggleDesc(${todo.id})">${todo.title}</span>
+                    <div class="todo-info">
+                        <span class="todo-tag">${todo.category}</span>
+                        ${todo.deadline ? `<span>🗓 ${todo.deadline}</span>` : ''}
+                    </div>
+                </div>
+
+                <div class="priority-dot ${dotClass}"></div>
+            </div>
+
+            <div id="desc-${todo.id}" class="todo-desc">
+                <p>${todo.description || '메모 없음'}</p>
+                <button class="delete-btn" onclick="deleteTodo(${todo.id})">삭제</button>
+            </div>
+        `;
+        todoList.appendChild(li);
+    });
 }
 
-.app-container {
-    max-width: 500px;
-    margin: 0 auto;
-    padding-bottom: 80px; /* 버튼 공간 확보 */
+// 6. 데이터 저장
+function saveAndRender() {
+    localStorage.setItem('memopipoTodos', JSON.stringify(todos));
+    render();
 }
 
-/* 헤더 */
-header {
-    margin-top: 20px;
-    margin-bottom: 40px;
-}
+// 7. 글로벌 함수 (HTML에서 호출)
+window.toggleComplete = function(id) {
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+        todo.isCompleted = !todo.isCompleted;
+        saveAndRender();
+    }
+};
 
-h1 {
-    font-size: 3rem;
-    margin: 0;
-    color: #2C3E50;
-    letter-spacing: -1px;
-}
+window.toggleDesc = function(id) {
+    const el = document.getElementById(`desc-${id}`);
+    if (el) el.classList.toggle('show');
+};
 
-.subtitle {
-    color: #888;
-    font-size: 1.2rem;
-    margin-top: 5px;
-}
+window.deleteTodo = function(id) {
+    if (confirm('이 기억을 지울까요?')) {
+        todos = todos.filter(t => t.id !== id);
+        saveAndRender();
+    }
+};
 
-/* 리스트 스타일 (심플 & 모던) */
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-.todo-item {
-    display: flex;
-    flex-direction: column;
-    padding: 15px 0;
-    border-bottom: 1px dashed var(--line-color);
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.todo-main {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* 커스텀 원형 체크박스 */
-.circle-check {
-    appearance: none;
-    width: 24px;
-    height: 24px;
-    border: 2px solid #ccc;
-    border-radius: 50%;
-    cursor: pointer;
-    flex-shrink: 0;
-    position: relative;
-    transition: all 0.2s;
-}
-
-.circle-check:checked {
-    background-color: var(--leaf-color);
-    border-color: var(--leaf-color);
-}
-
-.circle-check:checked::after {
-    content: '✔';
-    color: white;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
-}
-
-.todo-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.todo-title {
-    font-size: 1.4rem;
-    cursor: pointer;
-}
-
-.todo-info {
-    font-size: 0.9rem;
-    color: #999;
-    margin-top: 4px;
-}
-
-.todo-tag {
-    background: #eee;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    margin-right: 5px;
-}
-
-/* 우선순위 점 (오른쪽 표시) */
-.priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-left: auto;
-}
-.dot-red { background-color: #FF6B6B; box-shadow: 0 0 5px #FF6B6B; }
-.dot-blue { background-color: #4D96FF; }
-.dot-gray { background-color: #ddd; }
-
-/* 완료된 상태 */
-.completed .todo-title {
-    text-decoration: line-through;
-    color: #ccc;
-}
-.completed {
-    opacity: 0.6;
-}
-
-/* 설명창 (토글) */
-.todo-desc {
-    font-size: 1rem;
-    color: #666;
-    background: #f4f4f4;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 8px;
-    display: none;
-    line-height: 1.5;
-}
-.todo-desc.show { display: block; }
-.delete-btn {
-    margin-top: 10px;
-    background: #FF6B6B;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    float: right;
-    cursor: pointer;
-}
-
-/* 나뭇잎 버튼 (FAB) */
-.leaf-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
-    background-color: var(--leaf-color);
-    border: 2px solid #2C3E50;
-    border-radius: 50% 50% 0 50%; /* 나뭇잎 모양 */
-    box-shadow: 4px 4px 0px #2C3E50;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    transition: transform 0.1s;
-}
-
-.leaf-btn:active {
-    transform: scale(0.95);
-    box-shadow: 2px 2px 0px #2C3E50;
-}
-
-.leaf-icon {
-    font-size: 30px;
-    transform: rotate(45deg); /* 아이콘 각도 조절 */
-}
-
-/* 모달 (팝업) 스타일 */
-.hidden { display: none !important; }
-
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.modal-box {
-    background: var(--modal-bg);
-    width: 100%;
-    max-width: 400px;
-    border: 3px solid #2C3E50;
-    box-shadow: 6px 6px 0px #2C3E50;
-    border-radius: 12px;
-    padding: 20px;
-    animation: popUp 0.3s ease-out;
-}
-
-@keyframes popUp {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.modal-header h2 { margin: 0; font-size: 1.5rem; }
-.close-btn { background: none; border: none; font-size: 2rem; cursor: pointer; }
-
-/* 입력 필드 스타일 수정 (깨짐 방지) */
-.modal-body input[type="text"],
-.modal-body textarea,
-.modal-body select,
-.modal-body input[type="date"] {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-    background: #FAFAFA;
-}
-
-.modal-body input:focus, .modal-body textarea:focus {
-    border-color: var(--leaf-color);
-    outline: none;
-}
-
-.toggle-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.toggle-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-}
-
-/* 체크박스 커스텀 */
-.toggle-label input { display: none; }
-.pixel-checkbox {
-    width: 20px; height: 20px;
-    border: 2px solid #2C3E50;
-    background: white;
-    display: inline-block;
-}
-.toggle-label input:checked + .pixel-checkbox {
-    background: var(--leaf-color);
-    box-shadow: inset 2px 2px 0 rgba(0,0,0,0.2);
-}
-
-.confirm-btn {
-    width: 100%;
-    background: var(--leaf-color);
-    color: white;
-    border: 2px solid #2C3E50;
-    padding: 15px;
-    font-size: 1.3rem;
-    box-shadow: 3px 3px 0px #2C3E50;
-    cursor: pointer;
-}
-.confirm-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #2C3E50; }
+init();
